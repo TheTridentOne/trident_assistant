@@ -4,6 +4,8 @@ module TridentAssistant
   module Utils
     # build metadata of NFT
     class Metadata
+      class InvalidFormatError < TridentAssistant::Error; end
+
       attr_accessor :creator, :collection, :token, :checksum
 
       def initialize(**kwargs)
@@ -22,6 +24,16 @@ module TridentAssistant
         }.compact.with_indifferent_access
       end
 
+      def validate!
+        raise InvalidFormatError, creator unless creator_valid?
+        raise InvalidFormatError, collection unless collection_valid?
+        raise InvalidFormatError, token unless token_valid?
+        raise InvalidFormatError, checksum unless checksum_valid?
+        raise InvalidFormatError, "failed to validate hash" unless all_hash_valid?
+
+        true
+      end
+
       def valid?
         creator_valid? && collection_valid? && token_valid? && checksum_valid? && all_hash_valid?
       end
@@ -30,7 +42,7 @@ module TridentAssistant
         return false unless creator.is_a?(Hash)
 
         @creator = creator.with_indifferent_access
-        creator["id"] && creator["name"].is_a?(Array)
+        creator["id"].present? && creator["name"].present?
       end
 
       def collection_valid?

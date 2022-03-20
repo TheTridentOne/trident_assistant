@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "./client"
+require_relative "./cli/api"
+require_relative "./cli/metadata"
+require_relative "./cli/mint"
+require_relative "./cli/utils"
 
 module TridentAssistant
   # CLI tool
@@ -34,102 +38,6 @@ module TridentAssistant
     def version
       log VERSION
     end
-
-    desc "mint", "Mint NFT from NFO"
-    option :metadata, type: :string, aliases: "m", required: true, desc: "metadata or metadata.json file"
-    option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-    def mint
-      # parse metadata
-      metadata = Utils.parse_metadata options[:metadata]
-      log UI.fmt("{{v}} metadata parsed")
-
-      # validate metadata
-      if metadata.valid?
-        log UI.fmt("{{v}} metadta validated, metahash: #{metadata.json}")
-      else
-        log UI.fmt("{{x}} metadata is invalid")
-        log metadata.json
-        return
-      end
-
-      # upload metadata
-      upload =
-        client
-        .post(
-          "api/collectibles",
-          headers: {
-            Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-          },
-          json: {
-            metadata: metadata.json,
-            metahash: metadata.metahash
-          }
-        )
-      log upload
-      log UI.fmt("{{v}} metadata uploaded: https://#{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
-
-      # pay to NFO
-      trace_id = SecureRandom.uuid
-      memo = bot.api.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
-      if metadata.creator[:id] == bot.api.client_id
-        payment =
-          bot.api.create_multisig_transaction(
-            keystore[:pin],
-            {
-              asset_id: Utils::MINT_ASSET_ID,
-              trace_id: trace_id,
-              amount: Utils::MINT_AMOUNT,
-              memo: memo,
-              receivers: Utils::NFO_MTG[:members],
-              threshold: Utils::NFO_MTG[:threshod]
-            }
-          )
-
-        log payment["data"]
-        log UI.fmt("{{v}} NFT mint payment paid") if payment["errors"].blank?
-      else
-        payment =
-          bot.api.create_multisig_payment(
-            asset_id: Utils::MINT_ASSET_ID,
-            trace_id: trace_id,
-            amount: Utils::MINT_AMOUNT,
-            memo: memo,
-            receivers: Utils::NFO_MTG[:members],
-            threshold: Utils::NFO_MTG[:threshod]
-          )
-        log payment["data"]
-        log "Open the payment in Mixin Messenger: mixin://codes/#{payment["code_id"]}" if payment["code_id"].present?
-      end
-    rescue JSON::ParserError, Client::RequestError, MixinBot::Error => e
-      log UI.fmt("{{x}} #{e.inspect}")
-    end
-
-    desc "hash", "Hash a string or file using sha256"
-    option :string, type: :string, aliases: "s", desc: "String to hash"
-    option :file, type: :string, aliases: "f", desc: "File to hash"
-    def hash
-      content =
-        if options[:file].present? && File.file?(options[:file])
-          File.read options[:file]
-        elsif options[:string]
-          options[:string]
-        else
-          log UI.fmt "{{x}}: either STRING or FILE is needed"
-        end
-
-      return if content.blank?
-
-      log SHA3::Digest::SHA256.hexdigest(content)
-    end
-
-    desc "nft METAHASH", "query NFT by metahash"
-    def nft(metahash)
-      r = client.get "/api/collectibles/#{metahash}"
-      log r
-    end
-
-    desc "orders", "query open orders"
-    def orders; end
 
     def self.exit_on_failure?
       true

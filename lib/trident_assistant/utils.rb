@@ -66,7 +66,7 @@ module TridentAssistant
           else
             input
           end
-        JSON.parse input
+        JSON.parse(input).with_indifferent_access
       end
     end
   end
