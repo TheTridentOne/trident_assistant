@@ -3,15 +3,15 @@
 module TridentAssistant
   # HTTP client to trident server
   class Client
+    class HttpError < TridentAssistant::Error; end
     class RequestError < TridentAssistant::Error; end
 
-    SERVER_SCHEME = "https"
-    DEFAULT_HOST = "thetrident.one"
+    ENDPOINT = "https://thetrident.one"
 
-    attr_reader :host
+    attr_reader :endpoint
 
     def initialize(**kwargs)
-      @host = kwargs[:host].presence || DEFAULT_HOST
+      @endpoint = URI(kwargs[:endpoint] || ENDPOINT)
     end
 
     def get(path, **options)
@@ -52,8 +52,9 @@ module TridentAssistant
 
     def uri_for(path)
       uri_options = {
-        scheme: SERVER_SCHEME,
-        host: host,
+        scheme: endpoint.scheme,
+        host: endpoint.host,
+        port: endpoint.port,
         path: path
       }
       Addressable::URI.new(uri_options)

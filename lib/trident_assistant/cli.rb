@@ -4,6 +4,7 @@ require_relative "./client"
 require_relative "./cli/api"
 require_relative "./cli/metadata"
 require_relative "./cli/mint"
+require_relative "./cli/transfer"
 require_relative "./cli/utils"
 
 module TridentAssistant
@@ -12,14 +13,15 @@ module TridentAssistant
     # https://github.com/Shopify/cli-ui
     UI = ::CLI::UI
 
-    class_option :endpoint, type: :string, aliases: "-e", default: "thetrident.one", desc: "Specify trident endpoint"
+    class_option :endpoint, type: :string, aliases: "-e", default: "https://thetrident.one",
+                            desc: "Specify trident endpoint"
     class_option :pretty, type: :boolean, aliases: "-r", default: true, desc: "Print output in pretty"
 
     attr_reader :keystore, :bot, :client
 
     def initialize(*args)
       super
-      @client = Client.new host: options[:endpoint]
+      @client = Client.new endpoint: options[:endpoint]
 
       return if options[:keystore].blank?
 

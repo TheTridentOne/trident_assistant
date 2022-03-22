@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "./utils/memo"
 require_relative "./utils/metadata"
 
 module TridentAssistant
@@ -7,10 +8,6 @@ module TridentAssistant
   module Utils
     MINT_ASSET_ID = "c94ac88f-4671-3976-b60a-09064f1811e8"
     MINT_AMOUNT = 0.001
-    TRIDENT_MTG = {
-      members: [],
-      threshod: 1
-    }.freeze
     NFO_MTG = {
       members: %w[
         047061e6-496d-4c35-b06b-b0424a8a400d
@@ -22,6 +19,14 @@ module TridentAssistant
         dd655520-c919-4349-822f-af92fabdbdf4
       ].sort,
       threshod: 5
+    }.freeze
+    TRIDENT_MTG = {
+      members: %w[
+        28d390c7-a31b-4c46-bec2-871c86aaec53
+        0508a116-1239-4e28-b150-85a8e3e6b400
+        7ed9292d-7c95-4333-aa48-a8c640064186
+      ].sort,
+      threshod: 2
     }.freeze
 
     class << self

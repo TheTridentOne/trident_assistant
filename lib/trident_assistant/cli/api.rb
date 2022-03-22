@@ -3,6 +3,23 @@
 module TridentAssistant
   # CLI to query Trident and Mixin APIs
   class CLI < Thor
+    desc "auth", "auth in Trident"
+    option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+    def auth
+      r =
+        client
+        .post(
+          "api/auths",
+          json: {
+            client_id: keystore[:client_id],
+            session_id: keystore[:session_id],
+            private_key: keystore[:private_key]
+          }
+        )
+
+      log UI.fmt("{{v}} #{r}")
+    end
+
     desc "metadata METAHASH", "query NFT metadata by metahash"
     def metadata(metahash)
       r = client.get "/api/collectibles/#{metahash}"
