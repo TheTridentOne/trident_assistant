@@ -18,7 +18,7 @@ module TridentAssistant
         cf4abd9c-2cfa-4b5a-b1bd-e2b61a83fabd
         dd655520-c919-4349-822f-af92fabdbdf4
       ].sort,
-      threshod: 5
+      threshold: 5
     }.freeze
     TRIDENT_MTG = {
       members: %w[
@@ -26,7 +26,7 @@ module TridentAssistant
         0508a116-1239-4e28-b150-85a8e3e6b400
         7ed9292d-7c95-4333-aa48-a8c640064186
       ].sort,
-      threshod: 2
+      threshold: 2
     }.freeze
 
     class << self

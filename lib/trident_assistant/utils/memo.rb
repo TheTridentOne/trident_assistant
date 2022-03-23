@@ -37,12 +37,12 @@ module TridentAssistant
       def encode
         hash = {
           T: type,
-          N: token_id && UUID.new(hex: token_id).packed,
-          A: asset_id && UUID.new(hex: asset_id).packed,
-          O: order_id && UUID.new(hex: order_id).packed,
+          N: token_id && MixinBot::Utils::UUID.new(hex: token_id).packed,
+          A: asset_id && MixinBot::Utils::UUID.new(hex: asset_id).packed,
+          O: order_id && MixinBot::Utils::UUID.new(hex: order_id).packed,
           P: price && format("%.8f", price.to_f).gsub(/(0)+\z/, ""),
           R: reserve_price && format("%.8f", reserve_price.to_f).gsub(/(0)+\z/, ""),
-          RC: receiver_id && UUID.new(hex: receiver_id).packed,
+          RC: receiver_id && MixinBot::Utils::UUID.new(hex: receiver_id).packed,
           S: start_at && Time.parse(start_at).to_i,
           E: expire_at && Time.parse(start_at).to_i
         }.compact
