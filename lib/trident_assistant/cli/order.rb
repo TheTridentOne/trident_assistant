@@ -45,17 +45,18 @@ module TridentAssistant
       end
 
       desc "airdrop TOKEN", "airdrop NFT"
-      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       option :receiver, type: :string, aliases: "r", required: false, desc: "receiver ID of airdrop"
       option :start, type: :string, aliases: "s", required: false, desc: "start time of airdrop"
       option :expire, type: :string, aliases: "e", required: false, desc: "expire time of airdrop"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def airdrop(token)
         collectible = bot.collectibles["data"].find(&->(c) { c["token_id"] == token && c["state"] != "spent" })
         raise "Cannot find NFT in wallet" if collectible.blank?
 
-        log UI.fmt("{{v}} find collectible")
+        log UI.fmt("{{v}} found collectible #{token}")
 
-        memo = TridentAssistant::Utils::Memo.new(type: "AD").encode
+        memo = TridentAssistant::Utils::Memo.new(type: "AD", receiver_id: options[:receiver],
+                                                 start_at: options[:start]).encode
         nfo = MixinBot::Utils::Nfo.new extra: memo.unpack1("H*")
 
         tx =

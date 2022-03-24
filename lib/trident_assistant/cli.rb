@@ -15,7 +15,7 @@ module TridentAssistant
     class Command < TridentAssistant::CLI::Base
       class_option :endpoint, type: :string, aliases: "-e", default: "https://thetrident.one",
                               desc: "Specify trident endpoint"
-      class_option :pretty, type: :boolean, aliases: "-r", default: true, desc: "Print output in pretty"
+      class_option :pretty, type: :boolean, aliases: "-p", default: true, desc: "Print output in pretty"
 
       desc "version", "Display TridentAssistant version"
       def version
