@@ -22,6 +22,10 @@ module TridentAssistant
       request(:post, path, **options)
     end
 
+    def put(path, **options)
+      request(:put, path, **options)
+    end
+
     private
 
     def request(verb, path, **options)

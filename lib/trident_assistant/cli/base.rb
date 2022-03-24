@@ -6,6 +6,9 @@ module TridentAssistant
   # CLI base class
   module CLI
     class Base < Thor
+      # https://github.com/Shopify/cli-ui
+      UI = ::CLI::UI
+
       attr_reader :keystore, :bot, :client
 
       def initialize(*args)

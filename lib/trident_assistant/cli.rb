@@ -12,9 +12,6 @@ module TridentAssistant
   # CLI tool
   module CLI
     class Command < TridentAssistant::CLI::Base
-      # https://github.com/Shopify/cli-ui
-      UI = ::CLI::UI
-
       class_option :endpoint, type: :string, aliases: "-e", default: "https://thetrident.one",
                               desc: "Specify trident endpoint"
       class_option :pretty, type: :boolean, aliases: "-r", default: true, desc: "Print output in pretty"
