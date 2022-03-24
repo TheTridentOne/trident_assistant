@@ -3,8 +3,8 @@
 require_relative "./base"
 
 module TridentAssistant
-  # CLI for utils
   module CLI
+    # CLI for utils
     class Utils < Base
       desc "hash INPUT", "Hash a string or file using sha256"
       option :file, type: :boolean, aliases: "f", default: false, desc: "Hash a file"

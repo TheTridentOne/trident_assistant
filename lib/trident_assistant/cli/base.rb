@@ -3,8 +3,8 @@
 require_relative "../client"
 
 module TridentAssistant
-  # CLI base class
   module CLI
+    # Base class of CLI
     class Base < Thor
       # https://github.com/Shopify/cli-ui
       UI = ::CLI::UI

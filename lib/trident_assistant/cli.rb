@@ -11,6 +11,7 @@ require_relative "./cli/utils"
 module TridentAssistant
   # CLI tool
   module CLI
+    # Main commands of CLI
     class Command < TridentAssistant::CLI::Base
       class_option :endpoint, type: :string, aliases: "-e", default: "https://thetrident.one",
                               desc: "Specify trident endpoint"

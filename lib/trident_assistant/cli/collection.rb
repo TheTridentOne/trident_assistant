@@ -3,8 +3,8 @@
 require_relative "./base"
 
 module TridentAssistant
-  # CLI tool of collection
   module CLI
+    # CLI tool of collection
     class Collection < Base
       class InvalidError < TridentAssistant::Error; end
 

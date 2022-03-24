@@ -6,13 +6,14 @@ module TridentAssistant
     class Metadata
       class InvalidFormatError < TridentAssistant::Error; end
 
-      attr_accessor :creator, :collection, :token, :checksum
+      attr_reader :creator, :collection, :token, :checksum, :_metadata
 
       def initialize(**kwargs)
         @creator = kwargs[:creator] || {}
         @collection = kwargs[:collection] || {}
         @token = kwargs[:token] || {}
         @checksum = kwargs[:checksum] || {}
+        @_metadata = kwargs[:_metadata] || ""
       end
 
       def json
@@ -20,7 +21,8 @@ module TridentAssistant
           creator: creator,
           collection: collection,
           token: token,
-          checksum: checksum
+          checksum: checksum,
+          _metadata: _metadata
         }.compact.with_indifferent_access
       end
 

@@ -30,15 +30,14 @@ module TridentAssistant
       desc "withdraw TOKEN", "withdraw NFT"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def withdraw(token)
-        memo = Utils::Memo.new(type: "W", token_id: token)
         payment =
           bot.create_multisig_transaction(
             keystore[:pin],
             asset_id: EXCHANGE_ASSET_ID,
             amount: MINIMUM_AMOUNT,
-            receivers: Utils::TRIDENT_MTG[:members],
-            threshold: Utils::TRIDENT_MTG[:threshold],
-            memo: Utils::Memo.new(type: "W", token_id: token).encode,
+            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold],
+            memo: TridentAssistant::Utils::Memo.new(type: "W", token_id: token).encode,
             trace_id: SecureRandom.uuid
           )
 
@@ -56,7 +55,7 @@ module TridentAssistant
 
         log UI.fmt("{{v}} find collectible")
 
-        memo = Utils::Memo.new(type: "AD").encode
+        memo = TridentAssistant::Utils::Memo.new(type: "AD").encode
         nfo = MixinBot::Utils::Nfo.new extra: memo.unpack1("H*")
 
         tx =
@@ -65,8 +64,8 @@ module TridentAssistant
           else
             raw = bot.build_collectible_transaction(
               collectible: collectible,
-              receivers: Utils::TRIDENT_MTG[:members],
-              receivers_threshold: Utils::TRIDENT_MTG[:threshold],
+              receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+              receivers_threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold],
               nfo: nfo.encode.hex
             )
             bot.sign_raw_transaction raw

@@ -60,7 +60,8 @@ module TridentAssistant
           creator: metadata["creator"],
           collection: metadata["collection"],
           token: metadata["token"],
-          checksum: metadata["checksum"]
+          checksum: metadata["checksum"],
+          _metadata: metadata["_metadata"]
         )
       end
 
