@@ -25,26 +25,16 @@ module TridentAssistant
         log UI.fmt("{{v}} metadata validated")
 
         # upload metadata
-        client
-          .post(
-            "api/collectibles",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            },
-            json: {
-              metadata: metadata.json,
-              metahash: metadata.metahash
-            }
-          )
+        api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
         log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
         data["metahash"] = metadata.metahash
 
         # pay to NFO
         trace_id = SecureRandom.uuid
-        memo = bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
-        if metadata.creator[:id] == bot.client_id
+        memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
+        if metadata.creator[:id] == api.mixin_bot.client_id
           payment =
-            bot.create_multisig_transaction(
+            api.mixin_bot.create_multisig_transaction(
               keystore[:pin],
               {
                 asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
@@ -66,7 +56,7 @@ module TridentAssistant
           )
         else
           payment =
-            bot.create_multisig_payment(
+            api.mixin_bot.create_multisig_payment(
               asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
               trace_id: trace_id,
               amount: TridentAssistant::Utils::MINT_AMOUNT,
@@ -104,23 +94,13 @@ module TridentAssistant
           # ingore minted metadata.json
           next if file.split("_").first == metadata.metahash
 
-          client
-            .post(
-              "api/collectibles",
-              headers: {
-                Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-              },
-              json: {
-                metadata: metadata.json,
-                metahash: metadata.metahash
-              }
-            )
+          api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
           log UI.fmt("{{v}} #{file} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
 
           trace_id = SecureRandom.uuid
-          memo = bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
+          memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
           payment =
-            bot.create_multisig_transaction(
+            api.mixin_bot.create_multisig_transaction(
               keystore[:pin],
               {
                 asset_id: TridentAssistant::Utils::MINT_ASSET_ID,

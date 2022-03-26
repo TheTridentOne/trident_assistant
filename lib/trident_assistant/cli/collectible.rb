@@ -11,7 +11,7 @@ module TridentAssistant
                      desc: "keystore or keystore.json file of Mixin bot"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def index
-        r = bot.collectibles state: options[:state]
+        r = api.mixin_bot.collectibles state: options[:state]
 
         log r["data"]
       end
@@ -19,7 +19,7 @@ module TridentAssistant
       desc "show UUID", "query collectible"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def show(uuid)
-        r = bot.collectible uuid
+        r = api.mixin_bot.collectible uuid
 
         log r["data"]
       end

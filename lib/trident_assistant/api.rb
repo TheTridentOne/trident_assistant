@@ -1,10 +1,24 @@
 # frozen_string_literal: true
 
+require_relative "./client"
+require_relative "./api/collection"
+require_relative "./api/metadata"
+require_relative "./api/order"
+
 module TridentAssistant
   # APIs of Trident server
   class API
-    def collectible(metahash)
-      client.get "/api/collectibles/#{metahash}"
+    attr_reader :mixin_bot, :client
+
+    def initialize(**args)
+      @client = Client.new endpoint: args[:endpoint]
+      return if args[:keystore].blank?
+
+      @mixin_bot = TridentAssistant::Utils.mixin_bot_from_keystore args[:keystore]
     end
+
+    include TridentAssistant::API::Collection
+    include TridentAssistant::API::Metadata
+    include TridentAssistant::API::Order
   end
 end

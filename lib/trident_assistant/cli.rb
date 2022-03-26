@@ -13,9 +13,9 @@ module TridentAssistant
   module CLI
     # Main commands of CLI
     class Command < TridentAssistant::CLI::Base
-      class_option :endpoint, type: :string, aliases: "-e", default: "https://thetrident.one",
-                              desc: "Specify trident endpoint"
       class_option :pretty, type: :boolean, aliases: "-p", default: true, desc: "Print output in pretty"
+      class_option :environment, type: :string, aliases: "-e", default: "prod", desc: "prod | test | dev"
+      class_option :endpoint, type: :string, aliases: "-E", desc: "Specify an endpoint"
 
       desc "version", "Display TridentAssistant version"
       def version

@@ -11,26 +11,23 @@ module TridentAssistant
 
       desc "index", "list orders"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      option :collection, type: :string, aliases: "c", required: false, desc: "collection ID"
+      option :metahash, type: :string, aliases: "m", required: false, desc: "metahash"
+      option :type, type: :string, aliases: "t", required: false, desc: "ask | bid | auction"
+      option :state, type: :string, aliases: "s", required: false, desc: "open | completed"
       def index
-        log client
-          .get(
-            "api/orders",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            }
-          )
+        log api.orders(
+          collection_id: options[:collection],
+          metahash: options[:metahash],
+          state: options[:state],
+          type: options[:type]
+        )
       end
 
       desc "show ID", "query order"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def show(id)
-        log client
-          .get(
-            "api/orders/#{id}",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            }
-          )
+        log api.order id
       end
 
       desc "sell", "sell NFT at fixed price"
@@ -46,14 +43,7 @@ module TridentAssistant
       option :id, type: :string, aliases: "i", required: true, desc: "order ID"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def fill
-        order =
-          client
-          .get(
-            "api/orders/#{options[:id]}",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            }
-          )
+        order = api.order options[:id]
 
         if order["state"] != "open"
           log UI.fmt("{{x}} order #{order["state"]}")
@@ -65,7 +55,7 @@ module TridentAssistant
 
         trace_id = SecureRandom.uuid
         payment =
-          bot.create_multisig_transaction(
+          api.mixin_bot.create_multisig_transaction(
             keystore[:pin],
             {
               asset_id: order["asset_id"],
@@ -90,7 +80,7 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def withdraw(token)
         payment =
-          bot.create_multisig_transaction(
+          api.mixin_bot.create_multisig_transaction(
             keystore[:pin],
             asset_id: EXCHANGE_ASSET_ID,
             amount: MINIMUM_AMOUNT,
@@ -109,7 +99,9 @@ module TridentAssistant
       option :expire, type: :string, aliases: "e", required: false, desc: "expire time of airdrop"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def airdrop(token)
-        collectible = bot.collectibles["data"].find(&->(c) { c["token_id"] == token && c["state"] != "spent" })
+        collectible = api.mixin_bot.collectibles["data"].find(&lambda { |c|
+                                                                 c["token_id"] == token && c["state"] != "spent"
+                                                               })
         raise "Cannot find NFT in wallet" if collectible.blank?
 
         log UI.fmt("{{v}} found collectible #{token}")
@@ -122,18 +114,18 @@ module TridentAssistant
           if collectible["state"] == "signed"
             collectible["signed_tx"]
           else
-            raw = bot.build_collectible_transaction(
+            raw = api.mixin_bot.build_collectible_transaction(
               collectible: collectible,
               receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
               receivers_threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold],
               nfo: nfo.encode.hex
             )
-            bot.sign_raw_transaction raw
+            api.mixin_bot.sign_raw_transaction raw
           end
 
-        request = bot.create_sign_collectible_request tx
-        sign = bot.sign_collectible_request request["request_id"], keystore[:pin]
-        result = bot.send_raw_transaction sign["raw_transaction"]
+        request = api.mixin_bot.create_sign_collectible_request tx
+        sign = api.mixin_bot.sign_collectible_request request["request_id"], keystore[:pin]
+        result = api.mixin_bot.send_raw_transaction sign["raw_transaction"]
 
         log UI.fmt("{{v}} successfully transfer NFT")
         log result

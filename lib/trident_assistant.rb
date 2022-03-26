@@ -3,8 +3,13 @@
 require "mixin_bot"
 require "open-uri"
 
+# Trident SDK
 module TridentAssistant
   class Error < StandardError; end
+
+  def self.api
+    TridentAssistant::API.new
+  end
 end
 
 require_relative "trident_assistant/api"

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../client"
+require_relative "../api"
 
 module TridentAssistant
   module CLI
@@ -9,18 +9,27 @@ module TridentAssistant
       # https://github.com/Shopify/cli-ui
       UI = ::CLI::UI
 
-      attr_reader :keystore, :bot, :client
+      attr_reader :keystore, :bot, :client, :api
 
       def initialize(*args)
         super
-        @client = Client.new endpoint: options[:endpoint]
 
-        return if options[:keystore].blank?
-
-        @bot =
+        endpoint =
+          if options[:endpoint].present?
+            options[:endpoint]
+          else
+            {
+              prod: "https://thetrident.one",
+              test: "https://trident-test.onrender.com",
+              dev: "http://localhost:3000"
+            }[options[:environment].to_sym]
+          end
+        @api =
           begin
-            @keystore = TridentAssistant::Utils.parse_json options[:keystore]
-            TridentAssistant::Utils.mixin_bot_from_keystore @keystore
+            TridentAssistant::API.new(
+              endpoint: endpoint,
+              keystore: options[:keystore]
+            )
           rescue JSON::ParserError
             log UI.fmt("{{x}} falied to parse keystore.json: #{options[:keystore]}")
           rescue StandardError => e

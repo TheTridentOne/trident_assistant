@@ -11,12 +11,7 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       desc "index", "query all collections"
       def index
-        log client.get(
-          "api/collections.json",
-          headers: {
-            Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-          }
-        )
+        log api.collections
       end
 
       option :name, type: :string, aliases: "n", desc: "collection Name"
@@ -41,20 +36,13 @@ module TridentAssistant
         external_url = options[:url] || UI.ask("Please input collection external url, start with https:// or http://")
         split = options[:split] || UI.ask("Please input collection split", default: "0.0")
 
-        log client
-          .post(
-            "api/collections",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            },
-            json: {
-              name: name,
-              description: description,
-              external_url: external_url,
-              split: split.to_f.round(2),
-              icon_base64: Base64.strict_encode64(icon.read)
-            }
-          )
+        log api.create_collection(
+          name: name,
+          description: description,
+          external_url: external_url,
+          split: split,
+          icon_base64: Base64.strict_encode64(icon.read)
+        )
       rescue InvalidError => e
         log UI.fmt("{{x}} failed: #{e.inspect}")
       ensure
@@ -74,14 +62,7 @@ module TridentAssistant
           icon = File.open options[:icon]
           payload[:icon_base64] = Base64.strict_encode64(icon.read)
         end
-        log client
-          .put(
-            "api/collections/#{id}",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            },
-            json: payload
-          )
+        log api.update_collection(id, **payload)
       ensure
         icon&.close
       end
@@ -89,13 +70,7 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       desc "show ID", "query a collection"
       def show(id)
-        log client
-          .get(
-            "api/collections/#{id}",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            }
-          )
+        log api.collection id
       end
     end
   end

@@ -17,14 +17,7 @@ module TridentAssistant
         raise InvalidError, "Royalty must in 0.0 ~ 0.1" unless (0..0.1).include?(creator_royalty.to_f)
 
         collection_id = UI.ask("Please input collection ID")
-        collection =
-          client
-          .get(
-            "api/collections/#{collection_id}",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            }
-          )
+        collection = api.collection collection_id
         raise InvalidError, "Cannot find collection #{collection_id}" if collection.blank?
 
         if collection["creator"]&.[]("id") != bot.client_id
@@ -80,7 +73,7 @@ module TridentAssistant
       desc "show METAHASH", "query metadata via metahash"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def show(metahash)
-        log client.get("/api/collectibles/#{metahash}")
+        log api.metadata metahash
       end
 
       desc "upload", "upload metadata to Trident"
@@ -94,17 +87,7 @@ module TridentAssistant
         log UI.fmt("{{v}} metadata validated")
 
         # upload metadata
-        client
-          .post(
-            "api/collectibles",
-            headers: {
-              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
-            },
-            json: {
-              metadata: metadata.json,
-              metahash: metadata.metahash
-            }
-          )
+        api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
         log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
       rescue JSON::ParserError, Client::RequestError, InvalidError => e
         log UI.fmt("{{x}} #{e.inspect}")
