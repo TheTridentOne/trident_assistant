@@ -9,6 +9,30 @@ module TridentAssistant
       EXCHANGE_ASSET_ID = "965e5c6e-434c-3fa9-b780-c50f43cd955c"
       MINIMUM_AMOUNT = 0.000_000_01
 
+      desc "index", "list orders"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def index
+        log client
+          .get(
+            "api/orders",
+            headers: {
+              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
+            }
+          )
+      end
+
+      desc "show ID", "query order"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def show(id)
+        log client
+          .get(
+            "api/orders/#{id}",
+            headers: {
+              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
+            }
+          )
+      end
+
       desc "sell", "sell NFT at fixed price"
       def ask; end
 
@@ -18,13 +42,48 @@ module TridentAssistant
       desc "bid", "bid NFT"
       def bid; end
 
-      desc "accept", "accept order"
-      def accept; end
+      desc "fill", "fill order"
+      option :id, type: :string, aliases: "i", required: true, desc: "order ID"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def fill
+        order =
+          client
+          .get(
+            "api/orders/#{options[:id]}",
+            headers: {
+              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
+            }
+          )
+
+        if order["state"] != "open"
+          log UI.fmt("{{x}} order #{order["state"]}")
+          return
+        end
+
+        memo = TridentAssistant::Utils::Memo.new(type: "F", order_id: options[:id], token_id: order["token_id"])
+        log memo.json
+
+        trace_id = SecureRandom.uuid
+        payment =
+          bot.create_multisig_transaction(
+            keystore[:pin],
+            {
+              asset_id: order["asset_id"],
+              trace_id: trace_id,
+              amount: order["price"],
+              memo: memo.encode,
+              receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+              threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
+            }
+          )
+
+        log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}") if payment["errors"].blank?
+      end
 
       desc "cancel", "cancel order"
       def cancel; end
 
-      desc "deposit TOKEN ", "deposit NFT"
+      desc "deposit TOKEN", "deposit NFT"
       def deposit; end
 
       desc "withdraw TOKEN", "withdraw NFT"

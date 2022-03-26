@@ -55,13 +55,20 @@ module TridentAssistant
       end
 
       def parse_metadata(input)
-        metadata = TridentAssistant::Utils.parse_json input
+        metadata =
+          case input
+          when String
+            TridentAssistant::Utils.parse_json input
+          when Hash
+            input
+          else
+            {}
+          end
         TridentAssistant::Utils::Metadata.new(
           creator: metadata["creator"],
           collection: metadata["collection"],
           token: metadata["token"],
-          checksum: metadata["checksum"],
-          _metadata: metadata["_metadata"]
+          checksum: metadata["checksum"]
         )
       end
 

@@ -8,7 +8,7 @@ module TridentAssistant
     class Metadata < Base
       class InvalidError < TridentAssistant::Error; end
 
-      desc "new", "generate a new metadta"
+      desc "new", "generate a new metadata"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def new
         creator_id = bot.client_id
@@ -81,6 +81,33 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def show(metahash)
         log client.get("/api/collectibles/#{metahash}")
+      end
+
+      desc "upload", "upload metadata to Trident"
+      option :metadata, type: :string, aliases: "m", required: true, desc: "metadata or metadata.json file"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def upload
+        metadata = TridentAssistant::Utils.parse_metadata options[:metadata]
+        log UI.fmt("{{v}} metadata parsed")
+
+        metadata.validate!
+        log UI.fmt("{{v}} metadata validated")
+
+        # upload metadata
+        client
+          .post(
+            "api/collectibles",
+            headers: {
+              Authorization: "Bearer #{bot.access_token("GET", "/me")}"
+            },
+            json: {
+              metadata: metadata.json,
+              metahash: metadata.metahash
+            }
+          )
+        log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
+      rescue JSON::ParserError, Client::RequestError, InvalidError => e
+        log UI.fmt("{{x}} #{e.inspect}")
       end
     end
   end

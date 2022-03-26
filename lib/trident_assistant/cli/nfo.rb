@@ -11,11 +11,12 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def mint
         # parse metadata
-        metadata = TridentAssistant::Utils.parse_metadata options[:metadata]
+        data = TridentAssistant::Utils.parse_json options[:metadata]
+        metadata = TridentAssistant::Utils.parse_metadata data
         log UI.fmt("{{v}} metadata parsed")
 
-        if metadata._metadata.present?
-          log UI.fmt("{{v}} already minted: #{metadata._metadata}")
+        if data["token_id"].present?
+          log UI.fmt("{{v}} already minted: #{data["token_id"]}")
           return
         end
 
@@ -36,6 +37,7 @@ module TridentAssistant
             }
           )
         log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
+        data["metahash"] = metadata.metahash
 
         # pay to NFO
         trace_id = SecureRandom.uuid
@@ -55,6 +57,7 @@ module TridentAssistant
             )
 
           log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}") if payment["errors"].blank?
+          data["trace_id"] = trace_id
           File.write(
             options[:metadata],
             metadata.json.merge(
