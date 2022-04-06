@@ -35,7 +35,8 @@ module TridentAssistant
               description: kwargs[:description],
               external_url: kwargs[:external_url],
               split: kwargs[:split].to_f.round(2),
-              icon_base64: kwargs[:icon_base64]
+              icon_base64: kwargs[:icon_base64],
+              icon_url: kwargs[:icon_url]
             }
           )
       end

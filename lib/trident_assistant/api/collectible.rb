@@ -34,6 +34,7 @@ module TridentAssistant
 
       def airdrop(token_id, **kwargs)
         collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
+        collectible ||= mixin_bot.collectibles(state: :signed)["data"].find(&->(c) { c["token_id"] == token_id })
         raise "Unauthorized" if collectible.blank?
 
         memo =

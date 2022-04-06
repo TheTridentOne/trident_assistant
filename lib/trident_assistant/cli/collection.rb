@@ -28,25 +28,29 @@ module TridentAssistant
         description = options[:description] || UI.ask("Please input collection description")
         raise InvalidError, "Description cannot be blank" if description.blank?
 
-        icon = options[:icon] || UI.ask("Please input icon file")
-        raise InvalidError, "cannot find icon file: #{icon}}" unless File.exist? icon
-
-        icon = File.open icon
+        icon = options[:icon] || UI.ask("Please input icon file or icon url")
+        icon_file = File.open(icon) if File.exist? icon
 
         external_url = options[:url] || UI.ask("Please input collection external url, start with https:// or http://")
         split = options[:split] || UI.ask("Please input collection split", default: "0.0")
-
-        log api.create_collection(
+        payload = {
           name: name,
           description: description,
           external_url: external_url,
-          split: split,
-          icon_base64: Base64.strict_encode64(icon.read)
-        )
+          split: split
+        }
+
+        if icon_file.present?
+          payload[:icon_base64] = Base64.strict_encode64(icon_file.read)
+        else
+          payload[:icon_url] = icon
+        end
+
+        log api.create_collection(**payload)
       rescue InvalidError => e
         log UI.fmt("{{x}} failed: #{e.inspect}")
       ensure
-        icon.close
+        icon_file&.close
       end
 
       desc "update ID", "update collection"

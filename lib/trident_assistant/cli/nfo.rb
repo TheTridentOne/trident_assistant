@@ -22,6 +22,7 @@ module TridentAssistant
         raise "#{dir} is not a directory" unless Dir.exist?(dir)
 
         Dir.glob("#{dir}/*.json").each do |file|
+          log UI.fmt("{{v}} found #{file}")
           _mint file
         rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
                MixinBot::Error, RuntimeError => e
@@ -60,7 +61,7 @@ module TridentAssistant
         memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
         payment =
           api.mixin_bot.create_multisig_transaction(
-            keystore[:pin],
+            api.keystore[:pin],
             {
               asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
               trace_id: trace_id,
@@ -94,12 +95,13 @@ module TridentAssistant
           next
         end
 
+        log UI.fmt("{{v}} NFT successfully minted")
+      ensure
         if File.file? raw
           File.write raw, data.to_json
         else
           log data
         end
-        log UI.fmt("{{v}} NFT successfully minted")
       end
     end
   end

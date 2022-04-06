@@ -22,11 +22,13 @@ module TridentAssistant
     }.freeze
     TRIDENT_MTG = {
       members: %w[
-        28d390c7-a31b-4c46-bec2-871c86aaec53
-        0508a116-1239-4e28-b150-85a8e3e6b400
-        7ed9292d-7c95-4333-aa48-a8c640064186
+        6f5a84ce-d663-451e-b413-2d0c84b7629d
+        99216bb5-9787-49b6-b251-537362ce23eb
+        fcc1e3ec-97f1-41a7-89a3-20a0ec30a31f
+        1a361145-66a7-48cd-ab6c-db9a42da4074
+        9ba50819-159c-45e6-9bed-1eb2dded3360
       ].sort,
-      threshold: 2
+      threshold: 3
     }.freeze
 
     class << self
