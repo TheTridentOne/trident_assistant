@@ -67,18 +67,33 @@ module TridentAssistant
           metadata.validate!
           log UI.fmt("{{v}} metadata validated")
 
+          if data.dig("_airdrop", "hash").present?
+            log UI.fmt("{{v}} NFT already transferred")
+            next
+          end
+
           receiver_id = data.dig("_airdrop", "receiver_id")
           start_at = data.dig("_airdrop", "start_at")
           log UI.fmt("{{v}} airdrop receiver_id: #{receiver_id}")
           log UI.fmt("{{v}} airdrop start_at: #{start_at}")
 
-          log api.airdrop(metadata.collection["id"], metadata.token["id"], receiver_id: receiver_id, start_at: start_at)
+          r = api.airdrop metadata.collection["id"], metadata.token["id"], receiver_id: receiver_id, start_at: start_at
+          log r["data"]
+          data["_airdrop"] ||= {}
+          data["_airdrop"]["hash"] = r["data"]["hash"]
           log UI.fmt("{{v}} successfully transfer NFT ##{metadata.token["id"]} #{metadata.collection["id"]}")
         rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
                MixinBot::Error, RuntimeError => e
           log UI.fmt("{{x}} #{file} failed to airdrop: #{e.inspect}")
           next
+        ensure
+          File.write file, data.to_json
         end
+      end
+
+      private
+
+      def _airdrop
       end
     end
   end
