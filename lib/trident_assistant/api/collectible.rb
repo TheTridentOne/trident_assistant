@@ -7,7 +7,8 @@ module TridentAssistant
       EXCHANGE_ASSET_ID = "965e5c6e-434c-3fa9-b780-c50f43cd955c"
       MINIMUM_AMOUNT = 0.000_000_01
 
-      def deposit(token_id)
+      def deposit(collection, token)
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
         raise "Unauthorized" if collectible.blank?
 
@@ -20,7 +21,8 @@ module TridentAssistant
         )
       end
 
-      def withdraw(token_id)
+      def withdraw(collection, token)
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
           asset_id: EXCHANGE_ASSET_ID,
@@ -32,10 +34,11 @@ module TridentAssistant
         )
       end
 
-      def airdrop(token_id, **kwargs)
+      def airdrop(collection, token, **kwargs)
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
         collectible ||= mixin_bot.collectibles(state: :signed)["data"].find(&->(c) { c["token_id"] == token_id })
-        raise "Unauthorized" if collectible.blank?
+        raise "Cannot find collectible in wallet" if collectible.blank?
 
         memo =
           TridentAssistant::Utils::Memo.new(

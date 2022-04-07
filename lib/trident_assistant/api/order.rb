@@ -33,18 +33,18 @@ module TridentAssistant
       end
 
       def fill_order(order_id)
-        _order = order order_id
-        raise "Order state: #{_order["state"]}" if _order["state"] != "open"
+        info = order order_id
+        raise "Order state: #{info["state"]}" if info["state"] != "open"
 
-        memo = TridentAssistant::Utils::Memo.new(type: "F", order_id: order_id, token_id: _order["token_id"])
+        memo = TridentAssistant::Utils::Memo.new(type: "F", order_id: order_id, token_id: info["token_id"])
 
         trace_id = SecureRandom.uuid
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
           {
-            asset_id: _order["asset_id"],
+            asset_id: info["asset_id"],
             trace_id: trace_id,
-            amount: _order["price"],
+            amount: info["price"],
             memo: memo.encode,
             receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
             threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
@@ -53,19 +53,19 @@ module TridentAssistant
       end
 
       def cancel_order(order_id)
-        _order = order order_id
-        raise "Order maker: #{_order["maker"]["id"]}" if _order.dig("maker", "id") != mixin_bot.client_id
-        raise "Order state: #{_order["state"]}" if _order["state"] != "open"
+        info = order order_id
+        raise "Order maker: #{info["maker"]["id"]}" if info.dig("maker", "id") != mixin_bot.client_id
+        raise "Order state: #{info["state"]}" if info["state"] != "open"
 
-        memo = TridentAssistant::Utils::Memo.new(type: "C", order_id: order_id, token_id: _order["token_id"])
+        memo = TridentAssistant::Utils::Memo.new(type: "C", order_id: order_id, token_id: info["token_id"])
 
         trace_id = SecureRandom.uuid
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
           {
-            asset_id: _order["asset_id"],
+            asset_id: info["asset_id"],
             trace_id: trace_id,
-            amount: _order["price"],
+            amount: info["price"],
             memo: memo.encode,
             receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
             threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]

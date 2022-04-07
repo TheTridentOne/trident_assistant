@@ -16,41 +16,69 @@ module TridentAssistant
         log r["data"]
       end
 
-      desc "show UUID", "query collectible"
+      desc "show COLLECTION TOKEN", "query collectible"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-      def show(uuid)
-        r = api.mixin_bot.collectible uuid
+      def show(collection, token)
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
+        r = api.mixin_bot.collectible token_id
 
         log r["data"]
       end
 
-      desc "deposit TOKEN", "deposit NFT"
+      desc "deposit COLLECTION TOKEN", "deposit NFT"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-      def deposit(token)
-        log api.deposit token
+      def deposit(collection, token)
+        log api.deposit collection, token
         log UI.fmt("{{v}} successfully transfer NFT")
       rescue StandardError => e
         log UI.fmt("{{x}} failed: #{e.inspect} #{e.backtrace.join("\n")}")
       end
 
-      desc "airdrop TOKEN", "airdrop NFT"
+      desc "airdrop COLLECTION, TOKEN", "airdrop NFT"
       option :receiver, type: :string, aliases: "r", required: false, desc: "receiver ID of airdrop"
       option :start, type: :string, aliases: "s", required: false, desc: "start time of airdrop"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-      def airdrop(token)
-        log api.airdrop token, receiver_id: options[:receiver], start_at: options[:start]
+      def airdrop(collection, token)
+        log api.airdrop collection, token, receiver_id: options[:receiver], start_at: options[:start]
         log UI.fmt("{{v}} successfully transfer NFT")
       rescue StandardError => e
         log UI.fmt("{{x}} failed: #{e.inspect} #{e.backtrace.join("\n")}")
       end
 
-      desc "withdraw TOKEN", "withdraw NFT"
+      desc "withdraw COLLECTION TOKEN", "withdraw NFT"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-      def withdraw(token)
-        log api.withdraw token
+      def withdraw(collection, token)
+        log api.withdraw collection, token
         log UI.fmt("{{v}} successfully invoked withdraw")
       rescue StandardError => e
         log UI.fmt("{{x}} failed: #{e.inspect} #{e.backtrace.join("\n")}")
+      end
+
+      desc "bulkairdrop DIR", "Airdrop NFT in bulk"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def bulkairdrop(dir)
+        raise "#{dir} is not a directory" unless Dir.exist?(dir)
+
+        Dir.glob("#{dir}/*.json").each do |file|
+          log UI.fmt("{{v}} found #{file}")
+          data = TridentAssistant::Utils.parse_json file
+          metadata = TridentAssistant::Utils.parse_metadata data
+          log UI.fmt("{{v}} metadata parsed")
+          metadata.validate!
+          log UI.fmt("{{v}} metadata validated")
+
+          receiver_id = data.dig("_airdrop", "receiver_id")
+          start_at = data.dig("_airdrop", "start_at")
+          log UI.fmt("{{v}} airdrop receiver_id: #{receiver_id}")
+          log UI.fmt("{{v}} airdrop start_at: #{start_at}")
+
+          log api.airdrop(metadata.collection["id"], metadata.token["id"], receiver_id: receiver_id, start_at: start_at)
+          log UI.fmt("{{v}} successfully transfer NFT ##{metadata.token["id"]} #{metadata.collection["id"]}")
+        rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
+               MixinBot::Error, RuntimeError => e
+          log UI.fmt("{{x}} #{file} failed to airdrop: #{e.inspect}")
+          next
+        end
       end
     end
   end

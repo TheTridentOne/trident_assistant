@@ -39,25 +39,35 @@ module TridentAssistant
         metadata = TridentAssistant::Utils.parse_metadata data
         log UI.fmt("{{v}} metadata parsed")
 
-        if data.dig("_mint", "token_id").present?
-          log UI.fmt("{{v}} already minted: #{data["_mint"]["token_id"]}")
-          return
-        end
-
         # validate metadata
         metadata.validate!
         log UI.fmt("{{v}} metadata validated")
 
         raise "Creator ID incompatible with keystore" if metadata.creator[:id] != api.mixin_bot.client_id
 
+        token_id = MixinBot::Utils::Nfo.new(collection: metadata.collection[:id],
+                                            token: metadata.token[:id]).unique_token_id
+        collectible =
+          begin
+            api.mixin_bot.collectible token_id
+          rescue MixinBot::NotFoundError
+            nil
+          end
+        if collectible.present?
+          log UI.fmt("{{v}} already minted: #{token_id}")
+          return
+        end
+
         # upload metadata
-        api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
+        if data.dig("_mint", "metahash").blank?
+          api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
+          data["_mint"] ||= {}
+          data["_mint"]["metahash"] = metadata.metahash
+        end
         log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
-        data["_mint"] ||= {}
-        data["_mint"]["metahash"] = metadata.metahash
 
         # pay to NFO
-        trace_id = SecureRandom.uuid
+        trace_id = data.dig("_mint", "trace_id") || SecureRandom.uuid
         memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
         payment =
           api.mixin_bot.create_multisig_transaction(
@@ -72,27 +82,10 @@ module TridentAssistant
             }
           )
 
-        log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}") if payment["errors"].blank?
         data["_mint"]["trace_id"] = trace_id
-
-        5.times do
-          log UI.fmt("checking NFT in wallet...")
-          collectible =
-            api
-            .mixin_bot
-            .collectibles["data"]
-            .find do |c|
-              c["extra"] == metadata.metahash
-            end
-          if collectible.present?
-            data["_mint"]["token_id"] = collectible["token_id"]
-            log UI.fmt("{{v}} NFT found: #{collectible}")
-            break
-          end
-          sleep 1
-        rescue MixinBot::Error => e
-          log UI.fmt("{{x}} #{e.inspect}")
-          next
+        if payment["errors"].blank?
+          log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}")
+          data["_mint"]["token_id"] = token_id
         end
 
         log UI.fmt("{{v}} NFT successfully minted")

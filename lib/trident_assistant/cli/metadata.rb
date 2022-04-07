@@ -28,9 +28,31 @@ module TridentAssistant
         token_id = UI.ask("Please input token ID", default: "1")
         token_name = UI.ask("Please input token name")
         token_description = UI.ask("Please input token description")
-        token_icon_url = UI.ask("Please input token icon url")
-        token_media_url = UI.ask("Please input token media url")
-        token_media_hash = TridentAssistant::Utils.hash_from_url(token_media_url) if token_media_url.present?
+
+        token_icon_url = UI.ask("Please input token icon url or local file dir")
+        if File.file? token_icon_url
+          begin
+            file = File.open token_icon_url
+            res = api.mixin_bot.upload_attachment file
+            token_icon_url = res["view_url"]
+          ensure
+            file&.close
+          end
+        end
+
+        token_media_url = UI.ask("Please input token media url or local file dir")
+        if File.file? token_media_url
+          begin
+            file = File.open token_media_url
+            res = api.mixin_bot.upload_attachment file
+            token_media_url = res["view_url"]
+            token_media_hash = SHA3::Digest::SHA256.hexdigest file.read
+          ensure
+            file&.close
+          end
+        elsif token_media_url =~ URI::DEFAULT_PARSER.make_regexp
+          token_media_hash = TridentAssistant::Utils.hash_from_url(token_media_url)
+        end
 
         metadata = TridentAssistant::Utils::Metadata.new(
           creator: {
