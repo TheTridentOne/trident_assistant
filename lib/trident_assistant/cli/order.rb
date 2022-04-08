@@ -15,12 +15,14 @@ module TridentAssistant
       option :metahash, type: :string, aliases: "m", required: false, desc: "metahash"
       option :type, type: :string, aliases: "t", required: false, desc: "ask | bid | auction"
       option :state, type: :string, aliases: "s", required: false, desc: "open | completed"
+      option :page, type: :numeric, aliases: "p", required: false, desc: "page"
       def index
         log api.orders(
           collection_id: options[:collection],
           metahash: options[:metahash],
           state: options[:state],
-          type: options[:type]
+          type: options[:type],
+          page: options[:page]
         )
       end
 
@@ -49,28 +51,6 @@ module TridentAssistant
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def cancel(id)
         log api.cancel_order id
-      end
-
-      desc "deposit TOKEN", "deposit NFT"
-      def deposit(token)
-        log api.deposit_nft token
-      end
-
-      desc "withdraw TOKEN", "withdraw NFT"
-      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
-      def withdraw(token)
-        payment =
-          api.mixin_bot.create_multisig_transaction(
-            keystore[:pin],
-            asset_id: EXCHANGE_ASSET_ID,
-            amount: MINIMUM_AMOUNT,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold],
-            memo: TridentAssistant::Utils::Memo.new(type: "W", token_id: token).encode,
-            trace_id: SecureRandom.uuid
-          )
-
-        log UI.fmt("{{v}} payment: #{payment}")
       end
     end
   end

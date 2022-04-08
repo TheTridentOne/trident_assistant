@@ -17,7 +17,8 @@ module TridentAssistant
             collection_id: kwargs[:collection_id],
             metahash: kwargs[:metahash],
             state: kwargs[:state],
-            type: kwargs[:type]
+            type: kwargs[:type],
+            page: kwargs[:page]
           }
         )
       end

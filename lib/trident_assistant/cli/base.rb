@@ -14,16 +14,8 @@ module TridentAssistant
       def initialize(*args)
         super
 
-        endpoint =
-          if options[:endpoint].present?
-            options[:endpoint]
-          else
-            {
-              prod: "https://thetrident.one",
-              test: "https://trident-test.onrender.com",
-              dev: "http://localhost:3000"
-            }[options[:environment].to_sym]
-          end
+        endpoint = options[:endpoint] || "https://thetrident.one"
+
         @api =
           begin
             TridentAssistant::API.new(

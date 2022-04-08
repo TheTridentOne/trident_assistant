@@ -93,8 +93,7 @@ module TridentAssistant
 
       private
 
-      def _airdrop
-      end
+      def _airdrop; end
     end
   end
 end
