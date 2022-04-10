@@ -8,10 +8,11 @@ module TridentAssistant
       MINIMUM_AMOUNT = 0.000_000_01
 
       def orders(**kwargs)
+        authorization = mixin_bot ? mixin_bot.access_token("GET", "/me") : ""
         client.get(
           "api/orders",
           headers: {
-            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+            Authorization: "Bearer #{authorization}"
           },
           params: {
             collection_id: kwargs[:collection_id],

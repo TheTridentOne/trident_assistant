@@ -10,7 +10,8 @@ module TridentAssistant
       MINIMUM_AMOUNT = 0.000_000_01
 
       desc "index", "list orders"
-      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      option :keystore, type: :string, aliases: "k", required: false,
+                        desc: "keystore or keystore.json file of Mixin bot"
       option :collection, type: :string, aliases: "c", required: false, desc: "collection ID"
       option :metahash, type: :string, aliases: "m", required: false, desc: "metahash"
       option :type, type: :string, aliases: "t", required: false, desc: "ask | bid | auction"
