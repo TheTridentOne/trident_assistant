@@ -22,6 +22,7 @@ module TridentAssistant
         raise "#{dir} is not a directory" unless Dir.exist?(dir)
 
         Dir.glob("#{dir}/*.json").each do |file|
+          log "-" * 80
           log UI.fmt("{{v}} found #{file}")
           _mint file
         rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
@@ -69,23 +70,34 @@ module TridentAssistant
         # pay to NFO
         trace_id = data.dig("_mint", "trace_id") || SecureRandom.uuid
         memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
-        payment =
-          api.mixin_bot.create_multisig_transaction(
-            api.keystore[:pin],
-            {
-              asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
-              trace_id: trace_id,
-              amount: TridentAssistant::Utils::MINT_AMOUNT,
-              memo: memo,
-              receivers: TridentAssistant::Utils::NFO_MTG[:members],
-              threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
-            }
-          )
 
         data["_mint"]["trace_id"] = trace_id
-        if payment["errors"].blank?
+        10.times do
+          payment =
+            begin
+              api.mixin_bot.create_multisig_transaction(
+                api.keystore[:pin],
+                {
+                  asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
+                  trace_id: trace_id,
+                  amount: TridentAssistant::Utils::MINT_AMOUNT,
+                  memo: memo,
+                  receivers: TridentAssistant::Utils::NFO_MTG[:members],
+                  threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
+                }
+              )
+            rescue MixinBot::InsufficientPoolError => e
+              log UI.fmt("{{x}} #{e.inspect}")
+              log "Retrying to pay..."
+              sleep 0.5
+              nil
+            end
+
+          next if payment.blank? || payment["errors"].present?
+
           log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}")
           data["_mint"]["token_id"] = token_id
+          break
         end
 
         log UI.fmt("{{v}} NFT successfully minted")

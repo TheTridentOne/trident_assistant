@@ -60,17 +60,18 @@ module TridentAssistant
         raise "#{dir} is not a directory" unless Dir.exist?(dir)
 
         Dir.glob("#{dir}/*.json").each do |file|
+          log "-" * 80
           log UI.fmt("{{v}} found #{file}")
           data = TridentAssistant::Utils.parse_json file
-          metadata = TridentAssistant::Utils.parse_metadata data
-          log UI.fmt("{{v}} metadata parsed")
-          metadata.validate!
-          log UI.fmt("{{v}} metadata validated")
-
           if data.dig("_airdrop", "hash").present?
             log UI.fmt("{{v}} NFT already transferred")
             next
           end
+
+          metadata = TridentAssistant::Utils.parse_metadata data
+          log UI.fmt("{{v}} metadata parsed")
+          metadata.validate!
+          log UI.fmt("{{v}} metadata validated")
 
           receiver_id = data.dig("_airdrop", "receiver_id")
           start_at = data.dig("_airdrop", "start_at")
