@@ -21,15 +21,19 @@ module TridentAssistant
       def bulkmint(dir)
         raise "#{dir} is not a directory" unless Dir.exist?(dir)
 
-        Dir.glob("#{dir}/*.json").each do |file|
+        files = Dir.glob("#{dir}/*.json")
+        minted = []
+        files.each do |file|
           log "-" * 80
           log UI.fmt("{{v}} found #{file}")
-          _mint file
+          minted.push(file) if _mint(file)
         rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
                MixinBot::Error, RuntimeError => e
           log UI.fmt("{{x}} #{file} failed: #{e.inspect}")
           next
         end
+      ensure
+        log UI.fmt("Found #{files.size} json file, minted #{minted.size}")
       end
 
       private
@@ -56,7 +60,7 @@ module TridentAssistant
           end
         if collectible.present?
           log UI.fmt("{{v}} already minted: #{token_id}")
-          return
+          return true
         end
 
         # upload metadata
@@ -72,7 +76,7 @@ module TridentAssistant
         memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
 
         data["_mint"]["trace_id"] = trace_id
-        10.times do
+        loop do
           payment =
             begin
               api.mixin_bot.create_multisig_transaction(
@@ -86,10 +90,10 @@ module TridentAssistant
                   threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
                 }
               )
-            rescue MixinBot::InsufficientPoolError => e
+            rescue MixinBot::InsufficientPoolError, MixinBot::HttpError => e
               log UI.fmt("{{x}} #{e.inspect}")
               log "Retrying to pay..."
-              sleep 0.5
+              sleep 1
               nil
             end
 
@@ -97,10 +101,11 @@ module TridentAssistant
 
           log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}")
           data["_mint"]["token_id"] = token_id
+          log UI.fmt("{{v}} NFT successfully minted")
           break
         end
 
-        log UI.fmt("{{v}} NFT successfully minted")
+        data.dig("_mint", "token_id").present?
       ensure
         if File.file? raw
           File.write raw, data.to_json
