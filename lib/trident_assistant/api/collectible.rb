@@ -56,6 +56,23 @@ module TridentAssistant
         )
       end
 
+      def transfer(collection, token, recipient, **_kwargs)
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
+        collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
+        collectible ||= mixin_bot.collectibles(state: :signed)["data"].find(&->(c) { c["token_id"] == token_id })
+        raise "Cannot find collectible in wallet" if collectible.blank?
+
+        memo = "TRANSFER"
+        nfo = MixinBot::Utils::Nfo.new(extra: memo.unpack1("H*")).encode.hex
+
+        _transfer_nft(
+          collectible,
+          nfo,
+          receivers: [recipient],
+          threshold: 1
+        )
+      end
+
       private
 
       def _transfer_nft(collectible, nfo, **kwargs)

@@ -50,6 +50,14 @@ module TridentAssistant
 
         raise "Creator ID incompatible with keystore" if metadata.creator[:id] != api.mixin_bot.client_id
 
+        # upload metadata
+        if data.dig("_mint", "metahash").blank?
+          api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
+          data["_mint"] ||= {}
+          data["_mint"]["metahash"] = metadata.metahash
+        end
+        log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
+
         token_id = MixinBot::Utils::Nfo.new(collection: metadata.collection[:id],
                                             token: metadata.token[:id]).unique_token_id
         collectible =
@@ -62,14 +70,6 @@ module TridentAssistant
           log UI.fmt("{{v}} already minted: #{token_id}")
           return true
         end
-
-        # upload metadata
-        if data.dig("_mint", "metahash").blank?
-          api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
-          data["_mint"] ||= {}
-          data["_mint"]["metahash"] = metadata.metahash
-        end
-        log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
 
         # pay to NFO
         trace_id = data.dig("_mint", "trace_id") || SecureRandom.uuid

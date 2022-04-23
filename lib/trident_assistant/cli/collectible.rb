@@ -25,6 +25,15 @@ module TridentAssistant
         log r["data"]
       end
 
+      desc "transfer COLLECTION, TOKEN, RECIPIENT", "transfer NFT"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def transfer(collection, token, recipient)
+        log api.transfer collection, token, recipient
+        log UI.fmt("{{v}} successfully transfer NFT")
+      rescue StandardError => e
+        log UI.fmt("{{x}} failed: #{e.inspect} #{e.backtrace.join("\n")}")
+      end
+
       desc "deposit COLLECTION TOKEN", "deposit NFT"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def deposit(collection, token)
