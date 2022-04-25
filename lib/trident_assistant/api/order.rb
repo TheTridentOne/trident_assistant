@@ -34,6 +34,96 @@ module TridentAssistant
           )
       end
 
+      def ask_order(collection, token, **kwargs)
+        raise ArgumentError, "price cannot be blank" if kwargs[:price].blank?
+        raise ArgumentError, "asset_id cannot be blank" if kwargs[:asset_id].blank?
+
+        trace_id = SecureRandom.uuid
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
+        memo =
+          TridentAssistant::Utils::Memo
+          .new(
+            type: "A",
+            order_id: trace_id,
+            token_id: token_id,
+            price: kwargs[:price],
+            asset_id: kwargs[:asset_id],
+            expire_at: kwargs[:expire_at]
+          )
+
+        mixin_bot.create_multisig_transaction(
+          keystore[:pin],
+          {
+            asset_id: EXCHANGE_ASSET_ID,
+            trace_id: trace_id,
+            amount: MINIMUM_AMOUNT,
+            memo: memo.encode,
+            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
+          }
+        )
+      end
+
+      def auction_order(collection, token, **kwargs)
+        raise ArgumentError, "price cannot be blank" if kwargs[:price].blank?
+        raise ArgumentError, "asset_id cannot be blank" if kwargs[:asset_id].blank?
+
+        trace_id = SecureRandom.uuid
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
+        memo =
+          TridentAssistant::Utils::Memo
+          .new(
+            type: "AU",
+            order_id: trace_id,
+            token_id: token_id,
+            price: kwargs[:price],
+            reserve_price: kwargs[:reserve_price],
+            asset_id: kwargs[:asset_id],
+            expire_at: kwargs[:expire_at]
+          )
+
+        mixin_bot.create_multisig_transaction(
+          keystore[:pin],
+          {
+            asset_id: EXCHANGE_ASSET_ID,
+            trace_id: trace_id,
+            amount: MINIMUM_AMOUNT,
+            memo: memo.encode,
+            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
+          }
+        )
+      end
+
+      def bid_order(collection, token, **kwargs)
+        raise ArgumentError, "price cannot be blank" if kwargs[:price].blank?
+        raise ArgumentError, "asset_id cannot be blank" if kwargs[:asset_id].blank?
+
+        trace_id = SecureRandom.uuid
+        token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
+        memo =
+          TridentAssistant::Utils::Memo
+          .new(
+            type: "B",
+            order_id: trace_id,
+            token_id: token_id,
+            asset_id: kwargs[:asset_id],
+            expire_at: kwargs[:expire_at]
+          )
+
+        mixin_bot.create_multisig_transaction(
+          keystore[:pin],
+          {
+            asset_id: kwargs[:asset_id],
+            trace_id: trace_id,
+            amount: kwargs[:price],
+            memo: memo.encode,
+            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
+          }
+        )
+      end
+
       def fill_order(order_id)
         info = order order_id
         raise "Order state: #{info["state"]}" if info["state"] != "open"
@@ -44,9 +134,9 @@ module TridentAssistant
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
           {
-            asset_id: info["asset_id"],
+            asset_id: info["type"] == "BidOrder" ? EXCHANGE_ASSET_ID : info["asset_id"],
             trace_id: trace_id,
-            amount: info["price"],
+            amount: info["type"] == "BidOrder" ? MINIMUM_AMOUNT : info["price"],
             memo: memo.encode,
             receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
             threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
@@ -65,9 +155,9 @@ module TridentAssistant
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
           {
-            asset_id: info["asset_id"],
+            asset_id: EXCHANGE_ASSET_ID,
             trace_id: trace_id,
-            amount: info["price"],
+            amount: MINIMUM_AMOUNT,
             memo: memo.encode,
             receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
             threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]

@@ -44,7 +44,7 @@ module TridentAssistant
           R: reserve_price && format("%.8f", reserve_price.to_f).gsub(/(0)+\z/, ""),
           RC: receiver_id && MixinBot::Utils::UUID.new(hex: receiver_id).packed,
           S: start_at && Time.parse(start_at).to_i,
-          E: expire_at && Time.parse(start_at).to_i
+          E: expire_at && Time.parse(expire_at).to_i
         }.compact
 
         @encoded =

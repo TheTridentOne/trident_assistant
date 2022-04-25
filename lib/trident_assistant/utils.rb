@@ -30,6 +30,14 @@ module TridentAssistant
       ].sort,
       threshold: 3
     }.freeze
+    # TRIDENT_MTG = {
+    #   members: %w[
+    #     28d390c7-a31b-4c46-bec2-871c86aaec53
+    #     0508a116-1239-4e28-b150-85a8e3e6b400
+    #     7ed9292d-7c95-4333-aa48-a8c640064186
+    #   ].sort,
+    #   threshold: 2
+    # }.freeze
 
     class << self
       def hash_from_url(url)

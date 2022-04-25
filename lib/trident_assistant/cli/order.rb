@@ -33,14 +33,36 @@ module TridentAssistant
         log api.order id
       end
 
-      desc "sell", "sell NFT at fixed price"
-      def ask; end
+      desc "ask COLECTION TOKEN", "sell NFT at fixed price"
+      option :asset, type: :string, aliases: "a", required: true, desc: "Order asset ID"
+      option :price, type: :numeric, aliases: "p", required: true, desc: "Order price"
+      option :expiration, type: :string, aliases: "e", required: false, desc: "Order expiration"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def ask(collection, token)
+        log api.ask_order collection, token, asset_id: options[:asset], price: options[:price],
+                                             expire_at: options[:expiration]
+      end
 
       desc "auction", "auction NFT"
-      def auction; end
+      option :asset, type: :string, aliases: "a", required: true, desc: "Order asset ID"
+      option :price, type: :numeric, aliases: "p", required: true, desc: "Order price"
+      option :reserve_price, type: :numeric, aliases: "r", required: true, desc: "Order reserve price"
+      option :expiration, type: :string, aliases: "e", required: false, desc: "Order expiration"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def auction(collection, token)
+        log api.auction_order collection, token, asset_id: options[:asset], price: options[:price],
+                                                 reserve_price: options[:reserve_price], expire_at: options[:expiration]
+      end
 
-      desc "bid", "bid NFT"
-      def bid; end
+      desc "bid COLECTION TOKEN", "bid NFT"
+      option :asset, type: :string, aliases: "a", required: true, desc: "Order asset ID"
+      option :price, type: :numeric, aliases: "p", required: true, desc: "Order price"
+      option :expiration, type: :string, aliases: "e", required: false, desc: "Order expiration"
+      option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
+      def bid(collection, token)
+        log api.bid_order collection, token, asset_id: options[:asset], price: options[:price],
+                                             expire_at: options[:expiration]
+      end
 
       desc "fill ID", "fill order"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
