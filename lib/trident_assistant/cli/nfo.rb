@@ -26,9 +26,20 @@ module TridentAssistant
         files.each do |file|
           log "-" * 80
           log UI.fmt("{{v}} found #{file}")
-          minted.push(file) if _mint(file)
-        rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, Client::RequestError,
-               MixinBot::Error, RuntimeError => e
+          attempt = 0
+          success =
+            begin
+              attempt += 1
+              _mint file
+            rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError, MixinBot::HttpError, TridentAssistant::Client::HttpError,
+                   TridentAssistant::Client::RequestError, MixinBot::RequestError => e
+              log UI.fmt("{{x}} #{e.inspect}")
+              log UI.fmt("Retrying #{attempt} times...")
+              sleep 0.5
+              retry
+            end
+          minted.push(file) if success
+        rescue TridentAssistant::Utils::Metadata::InvalidFormatError, JSON::ParserError, RuntimeError => e
           log UI.fmt("{{x}} #{file} failed: #{e.inspect}")
           next
         end
@@ -76,33 +87,28 @@ module TridentAssistant
         memo = api.mixin_bot.nft_memo metadata.collection[:id], metadata.token[:id].to_i, metadata.metahash
 
         data["_mint"]["trace_id"] = trace_id
-        loop do
+        begin
           payment =
-            begin
-              api.mixin_bot.create_multisig_transaction(
-                api.keystore[:pin],
-                {
-                  asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
-                  trace_id: trace_id,
-                  amount: TridentAssistant::Utils::MINT_AMOUNT,
-                  memo: memo,
-                  receivers: TridentAssistant::Utils::NFO_MTG[:members],
-                  threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
-                }
-              )
-            rescue MixinBot::InsufficientPoolError, MixinBot::HttpError => e
-              log UI.fmt("{{x}} #{e.inspect}")
-              log "Retrying to pay..."
-              sleep 1
-              nil
-            end
-
-          next if payment.blank? || payment["errors"].present?
+            api.mixin_bot.create_multisig_transaction(
+              api.keystore[:pin],
+              {
+                asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
+                trace_id: trace_id,
+                amount: TridentAssistant::Utils::MINT_AMOUNT,
+                memo: memo,
+                receivers: TridentAssistant::Utils::NFO_MTG[:members],
+                threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
+              }
+            )
 
           log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}")
           data["_mint"]["token_id"] = token_id
           log UI.fmt("{{v}} NFT successfully minted")
-          break
+        rescue MixinBot::InsufficientPoolError, MixinBot::HttpError => e
+          log UI.fmt("{{x}} #{e.inspect}")
+          log "Retrying to pay..."
+          sleep 1
+          retry
         end
 
         data.dig("_mint", "token_id").present?

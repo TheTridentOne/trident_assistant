@@ -11,7 +11,7 @@ module TridentAssistant
                      desc: "keystore or keystore.json file of Mixin bot"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def index
-        r = api.mixin_bot.collectibles state: options[:state]
+        r = api.mixin_bot.collectibles state: options[:state], limit: 500
 
         log r["data"]
       end
@@ -87,7 +87,18 @@ module TridentAssistant
           log UI.fmt("{{v}} airdrop receiver_id: #{receiver_id}")
           log UI.fmt("{{v}} airdrop start_at: #{start_at}")
 
-          r = api.airdrop metadata.collection["id"], metadata.token["id"], receiver_id: receiver_id, start_at: start_at
+          attempt = 0
+          r =
+            begin
+              attempt += 1
+              api.airdrop metadata.collection["id"], metadata.token["id"], receiver_id: receiver_id, start_at: start_at
+            rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError, MixinBot::HttpError => e
+              log UI.fmt("{{x}} #{e.inspect}")
+              log UI.fmt("Retrying #{attempt} times...")
+              sleep 0.5
+              retry
+            end
+
           log r["data"]
           data["_airdrop"] ||= {}
           data["_airdrop"]["hash"] = r["data"]["hash"]

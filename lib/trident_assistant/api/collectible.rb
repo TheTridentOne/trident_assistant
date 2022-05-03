@@ -9,7 +9,7 @@ module TridentAssistant
 
       def deposit(collection, token)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
-        collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
+        collectible = find_collectible(:unspent, token_id)
         raise "Unauthorized" if collectible.blank?
 
         nfo = MixinBot::Utils::Nfo.new(extra: "deposit".unpack1("H*")).encode.hex
@@ -36,8 +36,8 @@ module TridentAssistant
 
       def airdrop(collection, token, **kwargs)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
-        collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
-        collectible ||= mixin_bot.collectibles(state: :signed)["data"].find(&->(c) { c["token_id"] == token_id })
+        collectible = find_collectible(:unspent, token_id)
+        collectible ||= find_collectible(:signed, token_id)
         raise "Cannot find collectible in wallet" if collectible.blank?
 
         memo =
@@ -58,8 +58,8 @@ module TridentAssistant
 
       def transfer(collection, token, recipient, **_kwargs)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
-        collectible = mixin_bot.collectibles(state: :unspent)["data"].find(&->(c) { c["token_id"] == token_id })
-        collectible ||= mixin_bot.collectibles(state: :signed)["data"].find(&->(c) { c["token_id"] == token_id })
+        collectible = find_collectible(:unspent, token_id)
+        collectible ||= find_collectible(:signed, token_id)
         raise "Cannot find collectible in wallet" if collectible.blank?
 
         memo = "TRANSFER"
@@ -75,23 +75,38 @@ module TridentAssistant
 
       private
 
-      def _transfer_nft(collectible, nfo, **kwargs)
-        tx =
-          if collectible["state"] == "signed"
-            collectible["signed_tx"]
-          else
-            raw = mixin_bot.build_collectible_transaction(
-              collectible: collectible,
-              receivers: kwargs[:receivers],
-              receivers_threshold: kwargs[:threshold],
-              nfo: nfo
-            )
-            mixin_bot.sign_raw_transaction raw
-          end
+      def find_collectible(state, token_id)
+        limit = 500
+        offset = ""
 
-        request = mixin_bot.create_sign_collectible_request tx
-        sign = mixin_bot.sign_collectible_request request["request_id"], keystore[:pin]
-        mixin_bot.send_raw_transaction sign["raw_transaction"]
+        loop do
+          r = mixin_bot.collectibles(state: state, limit: limit, offset: offset)["data"]
+          puts "offset: #{offset}, loaded #{r.size} collectibles"
+          collectible = r.find(&->(c) { c["token_id"] == token_id })
+          break collectible if collectible.present?
+
+          break if r.size < 500
+
+          offset = r.last["updated_at"]
+        end
+      end
+
+      def _transfer_nft(collectible, nfo, **kwargs)
+        if collectible["state"] == "signed"
+          mixin_bot.send_raw_transaction collectible["signed_tx"]
+        else
+          raw = mixin_bot.build_collectible_transaction(
+            collectible: collectible,
+            receivers: kwargs[:receivers],
+            receivers_threshold: kwargs[:threshold],
+            nfo: nfo
+          )
+          tx = mixin_bot.sign_raw_transaction raw
+
+          request = mixin_bot.create_sign_collectible_request tx
+          sign = mixin_bot.sign_collectible_request request["request_id"], keystore[:pin]
+          mixin_bot.send_raw_transaction sign["raw_transaction"]
+        end
       end
     end
   end
