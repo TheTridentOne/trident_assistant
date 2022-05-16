@@ -66,8 +66,8 @@ module TridentAssistant
           api.upload_metadata metadata: metadata.json, metahash: metadata.metahash
           data["_mint"] ||= {}
           data["_mint"]["metahash"] = metadata.metahash
+          log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
         end
-        log UI.fmt("{{v}} metadata uploaded: #{options[:endpoint]}/api/collectibles/#{metadata.metahash}")
 
         token_id = MixinBot::Utils::Nfo.new(collection: metadata.collection[:id],
                                             token: metadata.token[:id]).unique_token_id

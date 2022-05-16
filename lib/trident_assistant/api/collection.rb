@@ -13,11 +13,14 @@ module TridentAssistant
         )
       end
 
-      def collections
+      def collections(**kwargs)
         client.get(
           "api/collections",
           headers: {
             Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+          },
+          params: {
+            page: kwargs[:page]
           }
         )
       end
