@@ -7,6 +7,16 @@ module TridentAssistant
       EXCHANGE_ASSET_ID = "965e5c6e-434c-3fa9-b780-c50f43cd955c"
       MINIMUM_AMOUNT = 0.000_000_01
 
+      def collectibles
+        client
+          .get(
+            "api/collectibles",
+            headers: {
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+            }
+          )
+      end
+
       def deposit(collection, token)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = find_collectible(:unspent, token_id)
