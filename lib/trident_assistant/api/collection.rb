@@ -6,10 +6,7 @@ module TridentAssistant
     module Collection
       def collection(id)
         client.get(
-          "api/collections/#{id}",
-          headers: {
-            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
-          }
+          "api/collections/#{id}"
         )
       end
 
