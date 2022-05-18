@@ -7,12 +7,16 @@ module TridentAssistant
       EXCHANGE_ASSET_ID = "965e5c6e-434c-3fa9-b780-c50f43cd955c"
       MINIMUM_AMOUNT = 0.000_000_01
 
-      def collectibles
+      def collectibles(**kwargs)
         client
           .get(
             "api/collectibles",
             headers: {
               Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+            },
+            params: {
+              collection_id: kwargs[:collection_id],
+              page: kwargs[:page]
             }
           )
       end
