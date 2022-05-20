@@ -17,7 +17,8 @@ module TridentAssistant
             params: {
               collection_id: kwargs[:collection_id],
               type: kwargs[:type],
-              page: kwargs[:page]
+              page: kwargs[:page],
+              query: kwargs[:query]
             }
           )
       end
