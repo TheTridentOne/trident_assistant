@@ -4,6 +4,7 @@ require_relative "./client"
 require_relative "./api/collection"
 require_relative "./api/collectible"
 require_relative "./api/metadata"
+require_relative "./api/mixin_asset"
 require_relative "./api/order"
 
 module TridentAssistant
