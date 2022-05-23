@@ -52,7 +52,8 @@ module TridentAssistant
             json: {
               description: kwargs[:description],
               external_url: kwargs[:external_url],
-              icon_base64: kwargs[:icon_base64]
+              icon_base64: kwargs[:icon_base64],
+              icon_url: kwargs[:icon_url]
             }.compact
           )
       end

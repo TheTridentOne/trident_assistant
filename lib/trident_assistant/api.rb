@@ -22,6 +22,7 @@ module TridentAssistant
     include TridentAssistant::API::Collectible
     include TridentAssistant::API::Collection
     include TridentAssistant::API::Metadata
+    include TridentAssistant::API::MixinAsset
     include TridentAssistant::API::Order
   end
 end
