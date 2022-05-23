@@ -45,7 +45,7 @@ module TridentAssistant
       parse_response(response) do |parse_as, result|
         case parse_as
         when :json
-          break result if result["message"].blank?
+          break result if result.is_a?(Array) || (result.is_a?(Hash) && result["message"].blank?)
 
           raise result["message"]
         else
