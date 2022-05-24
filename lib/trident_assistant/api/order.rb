@@ -19,6 +19,7 @@ module TridentAssistant
             metahash: kwargs[:metahash],
             state: kwargs[:state],
             type: kwargs[:type],
+            maker_id: kwargs[:maker_id],
             page: kwargs[:page]
           }
         )
