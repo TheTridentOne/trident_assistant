@@ -10,6 +10,10 @@ require_relative "./api/order"
 module TridentAssistant
   # APIs of Trident server
   class API
+    class UnauthorizedError < TridentAssistant::Error; end
+    class ArgumentError < TridentAssistant::Error; end
+    class ForbiddenError < TridentAssistant::Error; end
+
     attr_reader :mixin_bot, :client, :keystore
 
     def initialize(**args)

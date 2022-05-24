@@ -26,7 +26,7 @@ module TridentAssistant
       def deposit(collection, token)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = find_collectible(:unspent, token_id)
-        raise "Unauthorized" if collectible.blank?
+        raise ForbiddenError, "Cannot find collectible" if collectible.blank?
 
         nfo = MixinBot::Utils::Nfo.new(extra: "deposit".unpack1("H*")).encode.hex
         _transfer_nft(
@@ -54,7 +54,7 @@ module TridentAssistant
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = find_collectible(:unspent, token_id)
         collectible ||= find_collectible(:signed, token_id)
-        raise "Cannot find collectible in wallet" if collectible.blank?
+        raise ForbiddenError, "Cannot find collectible in wallet" if collectible.blank?
 
         memo =
           TridentAssistant::Utils::Memo.new(
@@ -76,7 +76,7 @@ module TridentAssistant
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = find_collectible(:unspent, token_id)
         collectible ||= find_collectible(:signed, token_id)
-        raise "Cannot find collectible in wallet" if collectible.blank?
+        raise ForbiddenError, "Cannot find collectible in wallet" if collectible.blank?
 
         memo = "TRANSFER"
         nfo = MixinBot::Utils::Nfo.new(extra: memo.unpack1("H*")).encode.hex
