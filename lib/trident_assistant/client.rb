@@ -35,7 +35,7 @@ module TridentAssistant
       options[:headers]["Content-Type"] ||= "application/json"
 
       begin
-        response = HTTP.timeout(connect: 5, write: 60, read: 10).request(verb, uri, options)
+        response = HTTP.timeout(connect: 5, write: 120, read: 60).request(verb, uri, options)
       rescue HTTP::Error => e
         raise HttpError, e.message
       end
