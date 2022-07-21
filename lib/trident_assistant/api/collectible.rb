@@ -26,6 +26,7 @@ module TridentAssistant
       def deposit(collection, token)
         token_id = MixinBot::Utils::Nfo.new(collection: collection, token: token).unique_token_id
         collectible = find_collectible(:unspent, token_id)
+        collectible ||= find_collectible(:signed, token_id)
         raise ForbiddenError, "Cannot find collectible" if collectible.blank?
 
         nfo = MixinBot::Utils::Nfo.new(extra: "deposit".unpack1("H*")).encode.hex
