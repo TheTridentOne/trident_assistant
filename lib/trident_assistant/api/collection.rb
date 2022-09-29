@@ -32,6 +32,7 @@ module TridentAssistant
             },
             json: {
               name: kwargs[:name],
+              symbol: kwargs[:symbol],
               description: kwargs[:description],
               external_url: kwargs[:external_url],
               split: kwargs[:split].to_f.round(2),
