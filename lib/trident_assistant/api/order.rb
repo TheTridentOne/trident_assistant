@@ -127,7 +127,7 @@ module TridentAssistant
 
       def fill_order(order_id)
         info = order order_id
-        raise "Order state: #{info["state"]}" if info["state"] != "open"
+        raise ForbiddenError, "Order state: #{info["state"]}" if info["state"] != "open"
 
         memo = TridentAssistant::Utils::Memo.new(type: "F", order_id: order_id, token_id: info["token_id"])
 
