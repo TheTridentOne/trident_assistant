@@ -8,7 +8,7 @@ module TridentAssistant
       MINIMUM_AMOUNT = 0.000_000_01
 
       def orders(**kwargs)
-        authorization = mixin_bot ? mixin_bot.access_token("GET", "/me") : ""
+        authorization = mixin_bot ? mixin_bot.access_token("GET", "/me")['access_token'] : ""
         client.get(
           "api/orders",
           headers: {
@@ -30,7 +30,7 @@ module TridentAssistant
           .get(
             "api/orders/#{id}",
             headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
             }
           )
       end
@@ -54,14 +54,12 @@ module TridentAssistant
 
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
-          {
-            asset_id: EXCHANGE_ASSET_ID,
-            trace_id: trace_id,
-            amount: MINIMUM_AMOUNT,
-            memo: memo.encode,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
-          }
+          asset_id: EXCHANGE_ASSET_ID,
+          trace_id: trace_id,
+          amount: MINIMUM_AMOUNT,
+          memo: memo.encode,
+          receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+          threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
         )
       end
 
@@ -85,14 +83,12 @@ module TridentAssistant
 
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
-          {
-            asset_id: EXCHANGE_ASSET_ID,
-            trace_id: trace_id,
-            amount: MINIMUM_AMOUNT,
-            memo: memo.encode,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
-          }
+          asset_id: EXCHANGE_ASSET_ID,
+          trace_id: trace_id,
+          amount: MINIMUM_AMOUNT,
+          memo: memo.encode,
+          receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+          threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
         )
       end
 
@@ -114,14 +110,12 @@ module TridentAssistant
 
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
-          {
-            asset_id: kwargs[:asset_id],
-            trace_id: trace_id,
-            amount: kwargs[:price],
-            memo: memo.encode,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
-          }
+          asset_id: kwargs[:asset_id],
+          trace_id: trace_id,
+          amount: kwargs[:price],
+          memo: memo.encode,
+          receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+          threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
         )
       end
 
@@ -134,20 +128,18 @@ module TridentAssistant
         trace_id = SecureRandom.uuid
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
-          {
-            asset_id: info["type"] == "BidOrder" ? EXCHANGE_ASSET_ID : info["asset_id"],
-            trace_id: trace_id,
-            amount: info["type"] == "BidOrder" ? MINIMUM_AMOUNT : info["price"],
-            memo: memo.encode,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
-          }
+          asset_id: info["type"] == "BidOrder" ? EXCHANGE_ASSET_ID : info["asset_id"],
+          trace_id: trace_id,
+          amount: info["type"] == "BidOrder" ? MINIMUM_AMOUNT : info["price"],
+          memo: memo.encode,
+          receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+          threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
         )
       end
 
       def cancel_order(order_id)
         info = order order_id
-        raise ForbiddenError, "Order maker: #{info["maker"]["id"]}" if info.dig("maker", "id") != mixin_bot.client_id
+        raise ForbiddenError, "Order maker: #{info["maker"]["id"]}" if info.dig("maker", "id") != mixin_bot.app_id
         raise ForbiddenError, "Order state: #{info["state"]}" if info["state"] != "open"
 
         memo = TridentAssistant::Utils::Memo.new(type: "C", order_id: order_id, token_id: info["token_id"])
@@ -155,14 +147,12 @@ module TridentAssistant
         trace_id = SecureRandom.uuid
         mixin_bot.create_multisig_transaction(
           keystore[:pin],
-          {
-            asset_id: EXCHANGE_ASSET_ID,
-            trace_id: trace_id,
-            amount: MINIMUM_AMOUNT,
-            memo: memo.encode,
-            receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
-            threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
-          }
+          asset_id: EXCHANGE_ASSET_ID,
+          trace_id: trace_id,
+          amount: MINIMUM_AMOUNT,
+          memo: memo.encode,
+          receivers: TridentAssistant::Utils::TRIDENT_MTG[:members],
+          threshold: TridentAssistant::Utils::TRIDENT_MTG[:threshold]
         )
       end
     end

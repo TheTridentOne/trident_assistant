@@ -12,7 +12,7 @@ module TridentAssistant
           .get(
             "api/collectibles",
             headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
             },
             params: {
               collection_id: kwargs[:collection_id],
@@ -121,7 +121,7 @@ module TridentAssistant
           tx = mixin_bot.sign_raw_transaction raw
 
           request = mixin_bot.create_sign_collectible_request tx
-          sign = mixin_bot.sign_collectible_request request["request_id"], keystore[:pin]
+          sign = mixin_bot.sign_collectible_request request["request_id"], keystore[:spend_key] || keystore[:pin]
           mixin_bot.send_raw_transaction sign["raw_transaction"]
         end
       end

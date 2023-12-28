@@ -55,13 +55,9 @@ module TridentAssistant
 
       def mixin_bot_from_keystore(keystore)
         keystore = parse_json keystore if keystore.is_a?(String)
+        keystore = keystore.with_indifferent_access
 
-        MixinBot::API.new(
-          client_id: keystore["client_id"],
-          session_id: keystore["session_id"],
-          pin_token: keystore["pin_token"],
-          private_key: keystore["private_key"]
-        )
+        MixinBot::API.new **keystore
       end
 
       def parse_metadata(input)

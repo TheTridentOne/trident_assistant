@@ -59,7 +59,7 @@ module TridentAssistant
         metadata.validate!
         log UI.fmt("{{v}} metadata validated")
 
-        raise "Creator ID incompatible with keystore" if metadata.creator[:id] != api.mixin_bot.client_id
+        raise "Creator ID incompatible with keystore" if metadata.creator[:id] != api.mixin_bot.config.app_id
 
         # upload metadata
         if data.dig("_mint", "metahash").blank?
@@ -91,14 +91,12 @@ module TridentAssistant
           payment =
             api.mixin_bot.create_multisig_transaction(
               api.keystore[:pin],
-              {
-                asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
-                trace_id: trace_id,
-                amount: TridentAssistant::Utils::MINT_AMOUNT,
-                memo: memo,
-                receivers: TridentAssistant::Utils::NFO_MTG[:members],
-                threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
-              }
+              asset_id: TridentAssistant::Utils::MINT_ASSET_ID,
+              trace_id: trace_id,
+              amount: TridentAssistant::Utils::MINT_AMOUNT,
+              memo: memo,
+              receivers: TridentAssistant::Utils::NFO_MTG[:members],
+              threshold: TridentAssistant::Utils::NFO_MTG[:threshold]
             )
 
           log UI.fmt("{{v}} NFT mint payment paid: #{payment["data"]}")

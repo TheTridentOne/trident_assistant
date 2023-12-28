@@ -14,7 +14,7 @@ module TridentAssistant
         client.get(
           "api/collections",
           headers: {
-            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
           },
           params: {
             page: kwargs[:page]
@@ -28,7 +28,7 @@ module TridentAssistant
           .post(
             "api/collections",
             headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
             },
             json: {
               name: kwargs[:name],
@@ -48,7 +48,7 @@ module TridentAssistant
           .put(
             "api/collections/#{id}",
             headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")}"
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
             },
             json: {
               description: kwargs[:description],

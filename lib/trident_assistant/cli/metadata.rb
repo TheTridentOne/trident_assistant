@@ -11,7 +11,7 @@ module TridentAssistant
       desc "new", "generate a new metadata"
       option :keystore, type: :string, aliases: "k", required: true, desc: "keystore or keystore.json file of Mixin bot"
       def new
-        creator_id = api.mixin_bot.client_id
+        creator_id = api.mixin_bot.config.app_id
         creator_name = api.mixin_bot.me["full_name"]
         creator_royalty = UI.ask("Please input creator royalty, 0.0 ~ 0.1", default: "0.0")
         raise InvalidError, "Royalty must in 0.0 ~ 0.1" unless (0..0.1).include?(creator_royalty.to_f)
@@ -20,7 +20,7 @@ module TridentAssistant
         collection = api.collection collection_id
         raise InvalidError, "Cannot find collection #{collection_id}" if collection.blank?
 
-        if collection["creator"]&.[]("id") != api.mixin_bot.client_id
+        if collection["creator"]&.[]("id") != api.mixin_bot.config.app_id
           raise InvalidError,
                 "Unauthorized to mint in #{collection_id}"
         end
