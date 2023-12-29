@@ -12,105 +12,25 @@ module TridentAssistant
 
     def initialize(**kwargs)
       @endpoint = URI(kwargs[:endpoint] || ENDPOINT)
-    end
-
-    def get(path, **options)
-      request(:get, path, **options)
-    end
-
-    def post(path, **options)
-      request(:post, path, **options)
-    end
-
-    def put(path, **options)
-      request(:put, path, **options)
-    end
-
-    private
-
-    def request(verb, path, **options)
-      uri = uri_for path
-
-      options[:headers] ||= {}
-      options[:headers]["Content-Type"] ||= "application/json"
-
-      begin
-        response = HTTP.timeout(connect: 5, write: 120, read: 60).request(verb, uri, options)
-      rescue HTTP::Error => e
-        raise HttpError, e.message
-      end
-
-      raise RequestError, response.to_s unless response.status.success?
-
-      parse_response(response) do |parse_as, result|
-        case parse_as
-        when :json
-          break result if result.is_a?(Array) || (result.is_a?(Hash) && result["message"].blank?)
-
-          raise result["message"]
-        else
-          result
-        end
+      @conn = Faraday.new(url: @endpoint.to_s) do |f|
+        f.request :json
+        f.request :retry
+        f.response :raise_error
+        f.response :json
+        f.response :logger if kwargs[:debug]
       end
     end
 
-    def uri_for(path)
-      uri_options = {
-        scheme: endpoint.scheme,
-        host: endpoint.host,
-        port: endpoint.port,
-        path: path
-      }
-      Addressable::URI.new(uri_options)
+    def get(path, params = nil, headers = nil)
+      @conn.get(path, params&.compact, headers).body
     end
 
-    def parse_response(response)
-      content_type = response.headers[:content_type]
-      parse_as = {
-        %r{^application/json} => :json,
-        %r{^image/.*} => :file,
-        %r{^text/html} => :xml,
-        %r{^text/plain} => :plain
-      }.each_with_object([]) { |match, memo| memo << match[1] if content_type =~ match[0] }.first || :plain
+    def post(path, body = nil, headers = nil)
+      @conn.post(path, body&.compact, headers).body
+    end
 
-      if parse_as == :plain
-        result = JSON.parse(response&.body&.to_s)
-        result && yield(:json, result)
-
-        yield(:plain, response.body)
-      end
-
-      case parse_as
-      when :json
-        result = JSON.parse(response.body.to_s)
-      when :file
-        extension =
-          if response.headers[:content_type] =~ %r{^image/.*}
-            {
-              "image/gif": ".gif",
-              "image/jpeg": ".jpg",
-              "image/png": ".png"
-            }[response.headers["content-type"]]
-          else
-            ""
-          end
-
-        begin
-          file = Tempfile.new(["mixin-file-", extension])
-          file.binmode
-          file.write(response.body)
-        ensure
-          file&.close
-        end
-
-        result = file
-      when :xml
-        result = Hash.from_xml(response.body.to_s)
-      else
-        result = response.body
-      end
-
-      yield(parse_as, result)
+    def put(path, body = nil, headers = nil)
+      @conn.post(path, body&.compact, headers).body
     end
   end
 end

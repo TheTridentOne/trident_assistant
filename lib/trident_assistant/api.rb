@@ -17,7 +17,7 @@ module TridentAssistant
     attr_reader :mixin_bot, :client, :keystore
 
     def initialize(**args)
-      @client = Client.new endpoint: args[:endpoint]
+      @client = Client.new endpoint: args[:endpoint], debug: args[:debug]
       return if args[:keystore].blank?
 
       @keystore = TridentAssistant::Utils.parse_json args[:keystore]

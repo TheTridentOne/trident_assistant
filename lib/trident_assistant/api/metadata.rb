@@ -12,12 +12,12 @@ module TridentAssistant
         client
           .post(
             "api/collectibles",
-            headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
-            },
-            json: {
+            {
               metadata: metadata,
               metahash: metahash
+            },
+            {
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me", "")}"
             }
           )
       end

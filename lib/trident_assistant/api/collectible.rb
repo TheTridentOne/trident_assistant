@@ -11,14 +11,14 @@ module TridentAssistant
         client
           .get(
             "api/collectibles",
-            headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
-            },
-            params: {
+            {
               collection_id: kwargs[:collection_id],
               type: kwargs[:type],
               page: kwargs[:page],
               query: kwargs[:query]
+            },
+            {
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me", "")}"
             }
           )
       end

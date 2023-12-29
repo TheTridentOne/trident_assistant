@@ -13,11 +13,11 @@ module TridentAssistant
       def collections(**kwargs)
         client.get(
           "api/collections",
-          headers: {
-            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
-          },
-          params: {
+          {
             page: kwargs[:page]
+          },
+          {
+            Authorization: "Bearer #{mixin_bot.access_token("GET", "/me", "")}"
           }
         )
       end
@@ -27,10 +27,7 @@ module TridentAssistant
         client
           .post(
             "api/collections",
-            headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
-            },
-            json: {
+            {
               name: kwargs[:name],
               symbol: kwargs[:symbol],
               description: kwargs[:description],
@@ -38,6 +35,9 @@ module TridentAssistant
               split: kwargs[:split].to_f.round(4),
               icon_base64: kwargs[:icon_base64],
               icon_url: kwargs[:icon_url]
+            },
+            {
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me", "")}"
             }
           )
       end
@@ -47,15 +47,15 @@ module TridentAssistant
         client
           .put(
             "api/collections/#{id}",
-            headers: {
-              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me")['access_token']}"
-            },
-            json: {
+            {
               description: kwargs[:description],
               external_url: kwargs[:external_url],
               icon_base64: kwargs[:icon_base64],
               icon_url: kwargs[:icon_url]
-            }.compact
+            }.compact,
+            {
+              Authorization: "Bearer #{mixin_bot.access_token("GET", "/me", "")}"
+            }
           )
       end
     end

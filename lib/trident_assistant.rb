@@ -2,6 +2,9 @@
 
 require "mixin_bot"
 require "open-uri"
+require 'faraday'
+require 'faraday/multipart'
+require 'faraday/retry'
 
 # Trident SDK
 module TridentAssistant
